@@ -85,9 +85,15 @@ setTimeout(() => {
         let avg = 0;
         
         if (latencies.length > 0) {
-            min = Math.min(...latencies);
-            max = Math.max(...latencies);
-            const sum = latencies.reduce((a, b) => a + b, 0);
+            min = latencies[0];
+            max = latencies[0];
+            let sum = 0;
+            for (let i = 0; i < latencies.length; i++) {
+                const val = latencies[i];
+                if (val < min) min = val;
+                if (val > max) max = val;
+                sum += val;
+            }
             avg = (sum / latencies.length).toFixed(1);
         }
 
