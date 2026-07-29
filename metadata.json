@@ -1,0 +1,6 @@
+{
+  "name": "Creative AI",
+  "description": "Production-ready Creative AI suite featuring Conversational AI, Realistic Image Generator, AI Music Composer, Game Mind AI (Chess, Tic-Tac-Toe, Maze), and Unified History.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
