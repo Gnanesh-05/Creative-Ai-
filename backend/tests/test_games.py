@@ -1,8 +1,10 @@
 import asyncio
+import pytest
 from backend.services.chess_engine import SimpleChessBoard, compute_best_chess_move
 from backend.services.tictactoe_engine import compute_tictactoe_move, check_tictactoe_winner
 from backend.services.maze_engine import generate_procedural_maze, solve_maze_astar
 
+@pytest.mark.asyncio
 async def test_chess_engine():
     board = SimpleChessBoard()
     moves = board.get_legal_moves()
@@ -13,6 +15,7 @@ async def test_chess_engine():
     assert "fen" in res
     print("Chess Engine test PASSED!")
 
+@pytest.mark.asyncio
 async def test_tictactoe_engine():
     # Unbeatable minimax test: X places at center, O should respond optimally
     board = ["X", "", "", "", "", "", "", "", ""]
@@ -21,6 +24,7 @@ async def test_tictactoe_engine():
     assert res["status"] == "IN_PROGRESS"
     print("TicTacToe Engine test PASSED!")
 
+@pytest.mark.asyncio
 async def test_maze_engine():
     maze = generate_procedural_maze(11, 11)
     assert maze["rows"] == 11

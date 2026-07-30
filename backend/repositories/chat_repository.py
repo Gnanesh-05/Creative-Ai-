@@ -58,8 +58,7 @@ class ChatRepository(BaseRepository[ChatConversation]):
         )
         self.db.add(conv)
         await self.db.commit()
-        await self.db.refresh(conv)
-        return conv
+        return await self.get_conversation_by_id(conv.id, user_id)
 
     async def update_conversation(
         self,

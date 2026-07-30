@@ -1,7 +1,9 @@
 import asyncio
+import pytest
 from backend.providers.music_provider import RealMusicProvider
 from backend.schemas.music import MusicGenRequest, EnhanceMusicPromptRequest
 
+@pytest.mark.asyncio
 async def test_music_prompt_enhancement():
     provider = RealMusicProvider()
     enhanced = await provider.fun_enhance_prompt(
@@ -12,6 +14,7 @@ async def test_music_prompt_enhancement():
     assert enhanced is not None
     assert len(enhanced) > len("Emotional piano piece for a movie climax")
 
+@pytest.mark.asyncio
 async def test_music_generation():
     provider = RealMusicProvider()
     res = await provider.fun_generate_music(

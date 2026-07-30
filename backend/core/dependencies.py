@@ -12,8 +12,11 @@ async def fun_get_current_user_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)
 ) -> TokenData:
     if not credentials:
-        # For development / client ease, default to mock token payload if missing
-        return TokenData(user_id="user_101", email="creator@example.com")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication credentials are required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
         
     token = credentials.credentials
     payload = decode_token(token)

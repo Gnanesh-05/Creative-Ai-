@@ -1,5 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from backend.models.domain import GameSession, GameMove, GameResult, GameStatistic, GamePreference
 from backend.schemas.games import (
@@ -33,18 +34,36 @@ class GamesService:
             status="IN_PROGRESS"
         )
         db.add(session)
-        db.commit()
-        db.refresh(session)
+        await db.commit()
+        await db.refresh(session)
         return session
 
     async def fun_compute_chess_move(self, req: ChessMoveRequest, db: Optional[Session] = None, user_id: Optional[str] = None) -> GameResponse:
+        if req.session_id and db and user_id:
+            stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+            result = await db.execute(stmt)
+            session = result.scalars().first()
+            if session:
+                prev_state = session.current_state_json or {}
+                prev_fen = prev_state.get("fen")
+                if prev_fen:
+                    board = SimpleChessBoard(prev_fen)
+                    legal_moves = [coords_to_algebraic(m) for m in board.get_legal_moves()]
+                    player_move = f"{req.moveFrom}{req.moveTo}".lower()
+                    if not any(lm.startswith(player_move) for lm in legal_moves):
+                        raise ValueError("Illegal move")
+
         result = compute_best_chess_move(req.fen, req.difficulty)
         
         # If session_id is supplied and DB exists, record the move
         if req.session_id and db and user_id:
-            session = db.query(GameSession).filter(GameSession.id == req.session_id, GameSession.user_id == user_id).first()
+            stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+            db_res = await db.execute(stmt)
+            session = db_res.scalars().first()
             if session:
-                move_count = db.query(GameMove).filter(GameMove.session_id == req.session_id).count()
+                count_stmt = select(GameMove).where(GameMove.session_id == req.session_id)
+                count_result = await db.execute(count_stmt)
+                move_count = len(count_result.scalars().all())
                 db_move = GameMove(
                     session_id=req.session_id,
                     move_number=move_count + 1,
@@ -56,7 +75,7 @@ class GamesService:
                 if result.get("status") in ["CHECKMATE", "STALEMATE"]:
                     session.status = "WON" if result.get("winner") == "human" else ("LOST" if result.get("winner") == "ai" else "DRAW")
                 db.add(db_move)
-                db.commit()
+                await db.commit()
 
         return GameResponse(
             status=result.get("status", "SUCCESS"),
@@ -69,12 +88,33 @@ class GamesService:
         )
 
     async def fun_compute_tictactoe_move(self, req: TicTacToeMoveRequest, db: Optional[Session] = None, user_id: Optional[str] = None) -> GameResponse:
+        if req.session_id and db and user_id:
+            stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+            result = await db.execute(stmt)
+            session = result.scalars().first()
+            if session:
+                prev_state = session.current_state_json or {}
+                prev_board = prev_state.get("board")
+                if prev_board:
+                    diffs = 0
+                    for i in range(9):
+                        if prev_board[i] != req.board[i]:
+                            if prev_board[i] != "":
+                                raise ValueError("Cannot modify already occupied cell")
+                            diffs += 1
+                    if diffs > 1:
+                        raise ValueError("Multiple moves in a single turn are not allowed")
+
         result = compute_tictactoe_move(req.board, req.difficulty, req.ai_symbol)
         
         if req.session_id and db and user_id:
-            session = db.query(GameSession).filter(GameSession.id == req.session_id, GameSession.user_id == user_id).first()
+            stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+            db_res = await db.execute(stmt)
+            session = db_res.scalars().first()
             if session:
-                move_count = db.query(GameMove).filter(GameMove.session_id == req.session_id).count()
+                count_stmt = select(GameMove).where(GameMove.session_id == req.session_id)
+                count_result = await db.execute(count_stmt)
+                move_count = len(count_result.scalars().all())
                 db_move = GameMove(
                     session_id=req.session_id,
                     move_number=move_count + 1,
@@ -86,7 +126,7 @@ class GamesService:
                 if result.get("winner"):
                     session.status = "WON" if result.get("winner") == "X" else ("LOST" if result.get("winner") == "O" else "DRAW")
                 db.add(db_move)
-                db.commit()
+                await db.commit()
 
         return GameResponse(
             status=result.get("status", "SUCCESS"),
@@ -100,10 +140,12 @@ class GamesService:
         maze_data = generate_procedural_maze(req.rows, req.cols)
         
         if req.session_id and db and user_id:
-            session = db.query(GameSession).filter(GameSession.id == req.session_id, GameSession.user_id == user_id).first()
+            stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+            result = await db.execute(stmt)
+            session = result.scalars().first()
             if session:
                 session.current_state_json = maze_data
-                db.commit()
+                await db.commit()
 
         return GameResponse(
             status="SUCCESS",
@@ -112,7 +154,9 @@ class GamesService:
         )
 
     async def end_session(self, db: Session, user_id: str, req: EndGameSessionRequest) -> Dict[str, Any]:
-        session = db.query(GameSession).filter(GameSession.id == req.session_id, GameSession.user_id == user_id).first()
+        stmt = select(GameSession).where(GameSession.id == req.session_id, GameSession.user_id == user_id)
+        result = await db.execute(stmt)
+        session = result.scalars().first()
         if not session:
             return {"status": "ERROR", "message": "Session not found"}
 
@@ -131,7 +175,9 @@ class GamesService:
         db.add(game_result)
 
         # Update user statistics
-        stat = db.query(GameStatistic).filter(GameStatistic.user_id == user_id, GameStatistic.game_type == session.game_type).first()
+        stat_stmt = select(GameStatistic).where(GameStatistic.user_id == user_id, GameStatistic.game_type == session.game_type)
+        stat_result = await db.execute(stat_stmt)
+        stat = stat_result.scalars().first()
         if not stat:
             stat = GameStatistic(user_id=user_id, game_type=session.game_type)
             db.add(stat)
@@ -147,14 +193,16 @@ class GamesService:
         if stat.games_played > 0:
             stat.win_rate = float(stat.wins) / float(stat.games_played)
 
-        db.commit()
+        await db.commit()
         return {"status": "SUCCESS", "winner": req.winner, "games_played": stat.games_played, "win_rate": stat.win_rate}
 
     async def get_user_statistics(self, db: Session, user_id: str) -> List[GameStatisticResponse]:
-        stats = db.query(GameStatistic).filter(GameStatistic.user_id == user_id).all()
+        stmt = select(GameStatistic).where(GameStatistic.user_id == user_id)
+        result = await db.execute(stmt)
+        stats = result.scalars().all()
         # Ensure default entries for CHESS, TICTACTOE, MAZE
         existing_types = {s.game_type for s in stats}
-        result = [
+        result_list = [
             GameStatisticResponse(
                 game_type=s.game_type,
                 games_played=s.games_played,
@@ -166,16 +214,18 @@ class GamesService:
         ]
         for gt in ["CHESS", "TICTACTOE", "MAZE"]:
             if gt not in existing_types:
-                result.append(GameStatisticResponse(game_type=gt, games_played=0, wins=0, losses=0, draws=0, win_rate=0.0))
-        return result
+                result_list.append(GameStatisticResponse(game_type=gt, games_played=0, wins=0, losses=0, draws=0, win_rate=0.0))
+        return result_list
 
     async def get_user_preferences(self, db: Session, user_id: str) -> GamePreferenceResponse:
-        pref = db.query(GamePreference).filter(GamePreference.user_id == user_id).first()
+        stmt = select(GamePreference).where(GamePreference.user_id == user_id)
+        result = await db.execute(stmt)
+        pref = result.scalars().first()
         if not pref:
             pref = GamePreference(user_id=user_id)
             db.add(pref)
-            db.commit()
-            db.refresh(pref)
+            await db.commit()
+            await db.refresh(pref)
         return GamePreferenceResponse(
             default_chess_difficulty=pref.default_chess_difficulty,
             default_tictactoe_difficulty=pref.default_tictactoe_difficulty,
@@ -184,7 +234,9 @@ class GamesService:
         )
 
     async def update_user_preferences(self, db: Session, user_id: str, req: GamePreferenceRequest) -> GamePreferenceResponse:
-        pref = db.query(GamePreference).filter(GamePreference.user_id == user_id).first()
+        stmt = select(GamePreference).where(GamePreference.user_id == user_id)
+        result = await db.execute(stmt)
+        pref = result.scalars().first()
         if not pref:
             pref = GamePreference(user_id=user_id)
             db.add(pref)
@@ -193,8 +245,8 @@ class GamesService:
         pref.default_tictactoe_difficulty = req.default_tictactoe_difficulty
         pref.maze_size = req.maze_size
         pref.sound_effects = req.sound_effects
-        db.commit()
-        db.refresh(pref)
+        await db.commit()
+        await db.refresh(pref)
 
         return GamePreferenceResponse(
             default_chess_difficulty=pref.default_chess_difficulty,
