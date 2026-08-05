@@ -1,0 +1,28 @@
+# Nexus AI Web App Implementation Tasks
+
+- `[x]` Initialize project structure
+  - `[x]` Create `web` directory and initialize Vite React application
+  - `[x]` Install dependencies (`firebase`, `lucide-react`, etc.)
+  - `[x]` Create configuration templates (`.env.example`)
+- `[x]` Implement core services
+  - `[x]` Replicate Firebase database and Auth config (`firebase.js`)
+  - `[x]` Replicate Gemini API client (`gemini.js`)
+  - `[x]` Replicate PCM WAV Audio Synthesizer in JS (`audioSynth.js`)
+- `[x]` Implement theme and global styles
+  - `[x]` Write glassmorphic and iridescent variables & styles (`index.css`)
+- `[x]` Build views and pages
+  - `[x]` Authentication: Login, Sign Up, and Email Verification views
+  - `[x]` Home view: Floating 3D-like orb, quick prompt bar, feature buttons
+  - `[x]` Smart Chat view: Model switcher, chat bubbles, thinking indicator
+  - `[x]` Voice Assistant view: Canvas audio visualizer, Speech-to-Text & Text-to-Speech
+  - `[x]` Studio views:
+    - `[x]` Image Studio: Style picker, aspect ratio, Pollinations AI integration
+    - `[x]` Music Studio: BPM slider, instruments checklist, lyrics display, play/pause controls
+  - `[x]` Game Center views:
+    - `[x]` Tic-Tac-Toe vs AI (Easy, Smart, Unbeatable)
+    - `[x]` Chess AI
+    - `[x]` Mind Maze pathfinding game
+  - `[x]` Profile view: settings, premium status, upiId input
+- `[x]` Verify application compilation and local operation
+  - `[x]` Compile check with `npm run build`
+  - `[x]` Launch development server and run manual testing
