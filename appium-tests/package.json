@@ -1,0 +1,13 @@
+{
+  "name": "creative-ai-appium-tests",
+  "version": "1.0.0",
+  "description": "Appium E2E Tests for Creative AI Android Client App",
+  "main": "tests/app-tests.js",
+  "dependencies": {
+    "webdriverio": "^8.39.0",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "test": "node tests/app-tests.js"
+  }
+}
