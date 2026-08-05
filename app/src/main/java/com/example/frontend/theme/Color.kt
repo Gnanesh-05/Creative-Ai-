@@ -1,58 +1,32 @@
 package com.example.frontend.theme
 
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Light Pastel Canvas & Glass Surfaces (From Attached Image)
-val LightCanvasStart = Color(0xFFE3D9FF)
-val LightCanvasMid = Color(0xFFD8E2FE)
-val LightCanvasEnd = Color(0xFFF0E8FF)
+// White & Professional Executive Palette
+val ProfessionalBackground = Color(0xFFFAFAFC)
+val ProfessionalSurface = Color(0xFFFFFFFF)
+val ProfessionalSurfaceVariant = Color(0xFFF1F5F9)
 
-val LightGlassSurface = Color(0xD8FFFFFF)
-val LightGlassSurfaceVariant = Color(0xB8FFFFFF)
-val LightGlassBorder = Color(0xF0FFFFFF)
-val LightGlassShadow = Color(0x1F6B4DA0)
+val ProfessionalTextPrimary = Color(0xFF0F172A)
+val ProfessionalTextSecondary = Color(0xFF475569)
+val ProfessionalTextMuted = Color(0xFF94A3B8)
 
-// Rich Deep Violet Text Colors
-val TextPrimaryLight = Color(0xFF1E152A)
-val TextSecondaryLight = Color(0xFF52456E)
-val TextMutedLight = Color(0xFF8475A3)
+val ProfessionalPrimary = Color(0xFF2563EB) // Royal Professional Blue
+val ProfessionalPrimaryContainer = Color(0xFFEFF6FF)
+val ProfessionalOnPrimaryContainer = Color(0xFF1E3A8A)
 
-val TextPrimaryDark = Color(0xFFF3E8FF)
-val TextSecondaryDark = Color(0xFFC4B5FD)
+val ProfessionalSecondary = Color(0xFF3B82F6)
+val ProfessionalSecondaryContainer = Color(0xFFF8FAFC)
+val ProfessionalOnSecondaryContainer = Color(0xFF1E293B)
 
-// Rich Deep Purple/Violet Canvas Colors
-val OledBlack = Color(0xFF0D031A)
-val DarkSurface = Color(0xFF140727)
-val DarkSurfaceVariant = Color(0xFF210A3A)
-val GlassSurface = Color(0x38351556)
-val GlassSurfaceVariant = Color(0x504B1F7A)
-val GlassBorder = Color(0x40E0B0FF)
-val GlassHighlight = Color(0x2BFFFFFF)
+val ProfessionalBorder = Color(0xFFE2E8F0)
+val ProfessionalDivider = Color(0xFFF1F5F9)
 
-// Accent Glow Colors
-val NexusViolet = Color(0xFF8C52FF)
-val NexusMagenta = Color(0xFFE2629A)
-val NexusGold = Color(0xFFF3A051)
-val NexusCyan = Color(0xFF38BDF8)
-val NexusIndigo = Color(0xFF6366F1)
-val NexusPurple = Color(0xFFA855F7)
-val NexusPink = Color(0xFFEC4899)
-val NexusEmerald = Color(0xFF10B981)
-
-// Pastel Light Accents
-val PastelViolet = Color(0xFF8B5CF6)
-val PastelMagenta = Color(0xFFEC4899)
-val PastelCyan = Color(0xFF06B6D4)
-val PastelGold = Color(0xFFF59E0B)
-
-// Iridescent Brush
-val IridescentGradient = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFFC084FC),
-        Color(0xFFF472B6),
-        Color(0xFF38BDF8)
-    )
-)
+// Accent Highlights
+val ProfessionalAccentBlue = Color(0xFF2563EB)
+val ProfessionalAccentEmerald = Color(0xFF059669)
+val ProfessionalAccentIndigo = Color(0xFF4F46E5)
+val ProfessionalAccentViolet = Color(0xFF7C3AED)
+val ProfessionalAccentAmber = Color(0xFFD97706)
 
 

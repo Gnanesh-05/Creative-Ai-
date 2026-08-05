@@ -1,466 +1,320 @@
 package com.example.frontend.screens
 
-import android.graphics.BitmapFactory
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.BuildConfig
-import com.example.frontend.viewmodel.NexusViewModel
-import com.example.frontend.components.GlassCard
-import com.example.frontend.theme.IridescentGradient
-import com.example.frontend.theme.LightCanvasEnd
-import com.example.frontend.theme.LightCanvasMid
-import com.example.frontend.theme.LightCanvasStart
-import com.example.frontend.theme.LightGlassBorder
-import com.example.frontend.theme.LightGlassSurface
-import com.example.frontend.theme.PastelMagenta
-import com.example.frontend.theme.PastelViolet
-import com.example.frontend.theme.TextMutedLight
-import com.example.frontend.theme.TextPrimaryLight
-import com.example.frontend.theme.TextSecondaryLight
-import com.example.backend.util.MediaSharingUtils
-import java.io.File
+import com.example.frontend.viewmodel.AuthViewModel
+import com.example.frontend.viewmodel.SettingsViewModel
 
-import androidx.compose.ui.res.painterResource
-import com.example.backend.util.App3DAssets
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    viewModel: NexusViewModel,
-    onNavigateToHome: () -> Unit = {},
-    modifier: Modifier = Modifier
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel,
+    onLogout: () -> Unit
 ) {
-    val context = LocalContext.current
-    var isLoggedIn by remember { mutableStateOf(true) }
-    var userEmail by remember { mutableStateOf(com.example.backend.remote.SupabaseManager.currentUserEmail ?: "user@example.com") }
-    var userName by remember { mutableStateOf(userEmail.substringBefore("@").replaceFirstChar { it.uppercase() }) }
-    var showLoginScreen by remember { mutableStateOf(false) }
+    val profileState by settingsViewModel.profileUiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
 
-    var isLightGlassTheme by remember { mutableStateOf(true) }
-    var isLocalGpuEnabled by remember { mutableStateOf(true) }
-    var selectedHistoryFilter by remember { mutableStateOf("ALL") } // ALL, IMAGE, MUSIC
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editFullName by remember { mutableStateOf(profileState.profile.fullName) }
+    var editUsername by remember { mutableStateOf(profileState.profile.username) }
+    var editBio by remember { mutableStateOf(profileState.profile.bio) }
 
-    val assets by viewModel.studioAssets.collectAsState()
-    val isPlaying by viewModel.isMusicPlaying.collectAsState()
-
-    val filteredAssets = when (selectedHistoryFilter) {
-        "IMAGE" -> assets.filter { it.type == "IMAGE" }
-        "MUSIC" -> assets.filter { it.type == "MUSIC" }
-        else -> assets
+    LaunchedEffect(profileState.profile) {
+        editFullName = profileState.profile.fullName
+        editUsername = profileState.profile.username
+        editBio = profileState.profile.bio
     }
 
-    if (showLoginScreen) {
-        LoginScreen(
-            onLoginSuccess = { name, email ->
-                userName = name
-                userEmail = email
-                isLoggedIn = true
-                showLoginScreen = false
-                onNavigateToHome()
-            },
-            modifier = modifier
-        )
-        return
-    }
-
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        LightCanvasStart,
-                        LightCanvasMid,
-                        LightCanvasEnd
-                    )
-                )
-            )
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Profile Header Card
-        item {
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = LightGlassSurface,
-                borderColor = LightGlassBorder
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White)
-                                .border(1.5.dp, Color.White, RoundedCornerShape(16.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = App3DAssets.appLogo),
-                                contentDescription = "3D App Logo",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(16.dp))
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = userName,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimaryLight
-                                    )
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(PastelViolet)
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text("PRO", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            Text(
-                                text = userEmail,
-                                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryLight)
-                            )
-                        }
-                    }
-
-                    IconButton(
-                        onClick = { showLoginScreen = true },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.8f))
-                    ) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = "Switch Account / Login", tint = PastelViolet)
-                    }
-                }
-            }
-        }
-
-        // Dedicated Creation History Header & Filter Pills
-        item {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.History, contentDescription = null, tint = PastelViolet)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Creation History Log (${assets.size})",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = TextPrimaryLight)
-                        )
-                    }
-
-                    Text(
-                        text = "Tap item to view / play",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryLight, fontSize = 11.sp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Filter Pills: All, Images, Music
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val filters = listOf("ALL" to "All (${assets.size})", "IMAGE" to "Images (${assets.count { it.type == "IMAGE" }})", "MUSIC" to "Music (${assets.count { it.type == "MUSIC" }})")
-                    filters.forEach { (key, label) ->
-                        val isSelected = selectedHistoryFilter == key
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) PastelViolet else Color.White.copy(alpha = 0.8f))
-                                .border(1.dp, Color.White, RoundedCornerShape(12.dp))
-                                .clickable { selectedHistoryFilter = key }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) Color.White else TextSecondaryLight
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // History Gallery Items List
-        if (filteredAssets.isEmpty()) {
-            item {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = LightGlassSurface,
-                    borderColor = LightGlassBorder
-                ) {
-                    Column(
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            icon = { Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFFD0BCFF)) },
+            title = { Text("Edit Profile Details", color = Color.White) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = editFullName,
+                        onValueChange = { editFullName = it },
+                        label = { Text("Full Name") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFD0BCFF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = TextMutedLight, modifier = Modifier.size(36.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("No items found in creation history yet.", style = MaterialTheme.typography.bodyMedium.copy(color = TextMutedLight))
-                    }
+                            .padding(vertical = 4.dp)
+                            .testTag("profile_edit_fullname_input")
+                    )
+                    OutlinedTextField(
+                        value = editUsername,
+                        onValueChange = { editUsername = it },
+                        label = { Text("Username") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFD0BCFF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .testTag("profile_edit_username_input")
+                    )
+                    OutlinedTextField(
+                        value = editBio,
+                        onValueChange = { editBio = it },
+                        label = { Text("Short Bio") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFD0BCFF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .testTag("profile_edit_bio_input")
+                    )
                 }
-            }
-        } else {
-            items(filteredAssets) { asset ->
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = LightGlassSurface,
-                    borderColor = LightGlassBorder
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        settingsViewModel.updateProfile(editFullName, editUsername, editBio)
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4)),
+                    modifier = Modifier.testTag("profile_save_changes_button")
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = asset.title,
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = TextPrimaryLight)
-                                )
-                                Text(
-                                    text = "Prompt: ${asset.prompt}",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryLight),
-                                    maxLines = 2
-                                )
-                            }
+                    Text("Save Changes", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showEditDialog = false },
+                    modifier = Modifier.testTag("profile_cancel_edit_button")
+                ) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF1E1938),
+            modifier = Modifier.testTag("profile_edit_dialog")
+        )
+    }
 
-                            if (asset.type == "MUSIC") {
-                                IconButton(
-                                    onClick = { viewModel.toggleMusicPlayback(context, asset.assetUri) },
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(PastelViolet)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                        contentDescription = "Play Music",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Show preview image if type is IMAGE
-                        if (asset.type == "IMAGE" && !asset.assetUri.isNullOrEmpty()) {
-                            val imageBitmap = remember(asset.assetUri) {
-                                val file = File(asset.assetUri)
-                                if (file.exists()) BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap() else null
-                            }
-                            if (imageBitmap != null) {
-                                Image(
-                                    bitmap = imageBitmap,
-                                    contentDescription = asset.prompt,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                )
-                            }
-                        }
-
-                        // Show lyrics preview if type is MUSIC
-                        if (asset.type == "MUSIC") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.White.copy(alpha = 0.85f))
-                                    .padding(10.dp)
-                            ) {
-                                Text(
-                                    text = asset.paramsJson,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = TextPrimaryLight),
-                                    maxLines = 4
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Share / Download actions
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = {
-                                    if (asset.type == "IMAGE" && !asset.assetUri.isNullOrEmpty()) {
-                                        MediaSharingUtils.downloadImageToGallery(context, asset.assetUri)
-                                    } else {
-                                        MediaSharingUtils.downloadSongAndLyrics(context, asset.title, asset.paramsJson, asset.assetUri)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(38.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = PastelViolet),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Download", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-
-                            Button(
-                                onClick = {
-                                    if (asset.type == "IMAGE" && !asset.assetUri.isNullOrEmpty()) {
-                                        MediaSharingUtils.shareImageViaWhatsApp(context, asset.assetUri, asset.prompt)
-                                    } else {
-                                        MediaSharingUtils.shareMusicViaWhatsApp(context, asset.title, asset.paramsJson, asset.assetUri)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(38.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("WhatsApp", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
-                        }
-                    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0C20))
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .testTag("profile_screen_container")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "User Profile",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                IconButton(
+                    onClick = { showEditDialog = true },
+                    modifier = Modifier.testTag("profile_open_edit_button")
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Profile", tint = Color(0xFFD0BCFF))
                 }
             }
-        }
 
-        // System Specs & Engine Performance
-        item {
-            Text(text = "Engine Settings & Diagnostics", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = TextPrimaryLight))
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = LightGlassSurface,
-                borderColor = LightGlassBorder
+            // Avatar & Name Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1938)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(90.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF6750A4))
+                            .border(3.dp, Color(0xFFD0BCFF), CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Speed, contentDescription = null, tint = PastelViolet)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Real Engine Execution Latency", style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryLight))
-                        }
-                        Text("<280ms (60 FPS)", style = MaterialTheme.typography.bodyMedium.copy(color = PastelMagenta, fontWeight = FontWeight.Bold))
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = PastelViolet)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Nexus Engine Status", style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryLight))
-                        }
-                        Text(
-                            text = if (BuildConfig.GEMINI_API_KEY.isNotEmpty() && BuildConfig.GEMINI_API_KEY != "MY_GEMINI_API_KEY") "Configured & Active" else "Active (Local Fast Fallback)",
-                            style = MaterialTheme.typography.bodySmall.copy(color = PastelViolet, fontWeight = FontWeight.Bold)
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "Avatar",
+                            tint = Color.White,
+                            modifier = Modifier.size(54.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text("Luminous Glass Theme", style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryLight, fontWeight = FontWeight.Bold))
-                            Text("Pastel iridescence matching system design", style = MaterialTheme.typography.bodySmall.copy(color = TextMutedLight, fontSize = 11.sp))
-                        }
-                        Switch(
-                            checked = isLightGlassTheme,
-                            onCheckedChange = { isLightGlassTheme = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = PastelViolet, checkedTrackColor = Color.White)
-                        )
-                    }
+                    Text(
+                        text = profileState.profile.fullName.ifEmpty { "Creative Master" },
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = "@${profileState.profile.username.ifEmpty { authState.username.ifEmpty { "creator" } }}",
+                        fontSize = 13.sp,
+                        color = Color(0xFFD0BCFF)
+                    )
+
+                    Text(
+                        text = profileState.profile.email.ifEmpty { authState.email.ifEmpty { "user@creativeai.app" } },
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = profileState.profile.bio.ifEmpty { "AI Enthusiast & Game Creator" },
+                        fontSize = 12.sp,
+                        color = Color(0xFFCCC2DC),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Membership & Quota Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1938)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF4FD8EB).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.WorkspacePremium, contentDescription = null, tint = Color(0xFF4FD8EB))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = profileState.profile.tier,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Member since ${profileState.profile.accountCreated}",
+                                fontSize = 12.sp,
+                                color = Color(0xFFCCC2DC)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Daily AI Quota Used", fontSize = 13.sp, color = Color(0xFFCCC2DC))
+                        Text(
+                            "${profileState.profile.dailyGenerationsUsed} / ${profileState.profile.dailyGenerationsMax}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFD0BCFF)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { (profileState.profile.dailyGenerationsUsed.toFloat() / profileState.profile.dailyGenerationsMax.toFloat()).coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = Color(0xFFD0BCFF),
+                        trackColor = Color(0xFF49454F)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Action Buttons
+            Button(
+                onClick = { showEditDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B2544)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("profile_edit_button")
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFFD0BCFF))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Edit Profile Information", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    authViewModel.logout()
+                    onLogout()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("profile_logout_button")
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Sign Out & Logout", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

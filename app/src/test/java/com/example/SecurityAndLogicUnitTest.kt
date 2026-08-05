@@ -1,13 +1,13 @@
 package com.example
 
-import com.example.data.mapper.Mappers.toDomain
-import com.example.data.mapper.Mappers.toProfileDomain
-import com.example.data.remote.AiPreferencesDto
-import com.example.data.remote.GamePreferencesDto
-import com.example.data.remote.UserProfileDto
-import com.example.data.remote.UserSettingsDto
-import com.example.domain.model.UserProfileDomain
-import com.example.domain.model.UserSettingsDomain
+import com.example.backend.mapper.Mappers.toDomain
+import com.example.backend.mapper.Mappers.toProfileDomain
+import com.example.backend.remote.AiPreferencesDto
+import com.example.backend.remote.GamePreferencesDto
+import com.example.backend.remote.UserProfileDto
+import com.example.backend.remote.UserSettingsDto
+import com.example.backend.model.UserProfileDomain
+import com.example.backend.model.UserSettingsDomain
 import org.junit.Assert.*
 import org.junit.Test
 

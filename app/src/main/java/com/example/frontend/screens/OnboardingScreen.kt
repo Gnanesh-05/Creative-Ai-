@@ -2,323 +2,281 @@ package com.example.frontend.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.frontend.components.GlassCard
-import com.example.frontend.theme.IridescentGradient
-import com.example.frontend.theme.LightCanvasEnd
-import com.example.frontend.theme.LightCanvasMid
-import com.example.frontend.theme.LightCanvasStart
-import com.example.frontend.theme.LightGlassBorder
-import com.example.frontend.theme.LightGlassSurface
-import com.example.frontend.theme.PastelMagenta
-import com.example.frontend.theme.PastelViolet
-import com.example.frontend.theme.TextMutedLight
-import com.example.frontend.theme.TextPrimaryLight
-import com.example.frontend.theme.TextSecondaryLight
-import com.example.backend.util.App3DAssets
+import com.example.frontend.viewmodel.OnboardingViewModel
 
-data class NarrativePage(
+data class OnboardingPageData(
     val title: String,
     val subtitle: String,
     val description: String,
-    val imageRes: Int,
-    val badge: String
+    val icon: ImageVector,
+    val accentColor: Color
 )
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OnboardingScreen(
     onFinishOnboarding: () -> Unit,
-    modifier: Modifier = Modifier
+    onboardingViewModel: OnboardingViewModel? = null
 ) {
-    var currentPage by remember { mutableIntStateOf(0) }
-
-    val pages = listOf(
-        NarrativePage(
-            title = "Welcome to Nexus AI",
-            subtitle = "3D Next-Gen Intelligence Suite",
-            description = "Unleash real-time voice conversations, intelligent assistant personas, photorealistic image creation, and music synthesis in one place.",
-            imageRes = App3DAssets.appLogo,
-            badge = "✨ Neural Engine 3.0"
-        ),
-        NarrativePage(
-            title = "Voice & Conversational AI",
-            subtitle = "Fluid Real-Time Dialogue",
-            description = "Speak naturally with instant low-latency voice responses and custom AI assistant models trained for work, reasoning, and creativity.",
-            imageRes = App3DAssets.voiceMic,
-            badge = "🎙️ Real-Time Voice"
-        ),
-        NarrativePage(
-            title = "Visuals & Music Synthesis",
-            subtitle = "Turn Words into Art & Songs",
-            description = "Generate 100% precision visual artwork and complete songs with verse, lyrics, chords, and playable audio tracks in seconds.",
-            imageRes = App3DAssets.musicClef,
-            badge = "🎵 Instant Synthesis"
+    val pages = remember {
+        listOf(
+            OnboardingPageData(
+                title = "Welcome to Creative AI",
+                subtitle = "Multi-Modal Intelligence Workspace",
+                description = "Experience unified AI capabilities combining conversational language models, photorealistic studio generation, audio synthesis, and tactical game mind agents.",
+                icon = Icons.Default.AutoAwesome,
+                accentColor = Color(0xFF6750A4)
+            ),
+            OnboardingPageData(
+                title = "Conversational Chat AI",
+                subtitle = "Gemini LLM Reasoning Engine",
+                description = "Engage in intelligent dialogue for code generation, complex problem solving, document synthesis, and deep creative brainstorming.",
+                icon = Icons.Default.Chat,
+                accentColor = Color(0xFF006874)
+            ),
+            OnboardingPageData(
+                title = "Studio & Music Composer",
+                subtitle = "Visual Artwork & Audio Synthesis",
+                description = "Transform text prompts into high-resolution images, customizable style presets, and real-time synthesized ambient music melodies.",
+                icon = Icons.Default.Brush,
+                accentColor = Color(0xFF984061)
+            ),
+            OnboardingPageData(
+                title = "Game Mind AI",
+                subtitle = "Chess, Tic-Tac-Toe & AI Maze",
+                description = "Test your strategy against adaptive AI in tactical Chess with positional analysis, smart Tic-Tac-Toe, and procedurally solved mazes.",
+                icon = Icons.Default.SportsEsports,
+                accentColor = Color(0xFF8C4E2A)
+            )
         )
-    )
+    }
 
-    // Infinite Breathing Float Animation for 3D Asset
-    val infiniteTransition = rememberInfiniteTransition(label = "FloatAnim")
-    val floatScale by infiniteTransition.animateFloat(
-        initialValue = 0.96f,
-        targetValue = 1.04f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "Scale"
-    )
+    val pageIndexFromVm by onboardingViewModel?.currentPage?.collectAsState() ?: remember { mutableStateOf(0) }
+    var localPageIndex by remember { mutableStateOf(0) }
+    
+    val currentPage = if (onboardingViewModel != null) pageIndexFromVm else localPageIndex
+
+    fun completeAndNavigate() {
+        onboardingViewModel?.completeOnboarding()
+        onFinishOnboarding()
+    }
+
+    fun goToNext() {
+        if (currentPage < pages.size - 1) {
+            if (onboardingViewModel != null) {
+                onboardingViewModel.nextPage()
+            } else {
+                localPageIndex++
+            }
+        } else {
+            completeAndNavigate()
+        }
+    }
+
+    fun goToPrevious() {
+        if (currentPage > 0) {
+            if (onboardingViewModel != null) {
+                onboardingViewModel.previousPage()
+            } else {
+                localPageIndex--
+            }
+        }
+    }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        LightCanvasStart,
-                        LightCanvasMid,
-                        LightCanvasEnd
-                    )
-                )
-            )
-            .padding(24.dp)
+            .background(Color(0xFFFCF8FF))
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .testTag("onboarding_container")
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Bar: Progress Indicator + Skip Button
+            // Top Navigation Bar (Back & Skip)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Stepper Dots
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    pages.indices.forEach { index ->
-                        val isSelected = index == currentPage
+                if (currentPage > 0) {
+                    IconButton(
+                        onClick = { goToPrevious() },
+                        modifier = Modifier.testTag("onboarding_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF49454F)
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(48.dp))
+                }
+
+                if (currentPage < pages.size - 1) {
+                    TextButton(
+                        onClick = { completeAndNavigate() },
+                        modifier = Modifier.testTag("onboarding_skip_button")
+                    ) {
+                        Text(
+                            text = "Skip",
+                            color = Color(0xFF49454F),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(48.dp))
+                }
+            }
+
+            // Middle Content - Editorial Animated Card
+            val page = pages[currentPage]
+            AnimatedContent(
+                targetState = page,
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                },
+                label = "onboarding_page_transition"
+            ) { currentPageData ->
+                Card(
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF3EDF7)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp)
+                    ) {
                         Box(
                             modifier = Modifier
-                                .height(6.dp)
-                                .width(if (isSelected) 28.dp else 10.dp)
+                                .size(104.dp)
                                 .clip(CircleShape)
-                                .background(if (isSelected) PastelViolet else Color.White.copy(alpha = 0.6f))
-                        )
-                    }
-                }
-
-                Text(
-                    text = "Skip",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = PastelViolet,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.clickable { onFinishOnboarding() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Main Animated Content Section
-            AnimatedContent(
-                targetState = currentPage,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
-                            slideOutHorizontally { width -> -width } + fadeOut()
-                        )
-                    } else {
-                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
-                            slideOutHorizontally { width -> width } + fadeOut()
-                        )
-                    }
-                },
-                label = "NarrativeContent"
-            ) { pageIdx ->
-                val page = pages[pageIdx]
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // 3D Animated Hero Illustration Frame
-                    Box(
-                        modifier = Modifier
-                            .size(240.dp)
-                            .graphicsLayer {
-                                scaleX = floatScale
-                                scaleY = floatScale
-                            }
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(Color.White.copy(alpha = 0.85f))
-                            .border(2.dp, Color.White, RoundedCornerShape(32.dp))
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = page.imageRes),
-                            contentDescription = page.title,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(24.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
-                    // Narrative Text Glass Card
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = LightGlassSurface,
-                        borderColor = LightGlassBorder
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .background(Color(0xFFEADDFF)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(PastelViolet.copy(alpha = 0.15f))
-                                    .border(1.dp, PastelViolet.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = page.badge,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = PastelViolet
-                                    )
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = page.title,
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimaryLight,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Text(
-                                text = page.subtitle,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = PastelMagenta,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Text(
-                                text = page.description,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryLight,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 18.sp
-                                )
+                            Icon(
+                                imageVector = currentPageData.icon,
+                                contentDescription = currentPageData.title,
+                                tint = currentPageData.accentColor,
+                                modifier = Modifier.size(56.dp)
                             )
                         }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = currentPageData.subtitle.uppercase(),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = currentPageData.accentColor,
+                            letterSpacing = 1.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = currentPageData.title,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1D1B1E),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = currentPageData.description,
+                            fontSize = 14.sp,
+                            color = Color(0xFF49454F),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Bottom Navigation Action Button
-            Button(
-                onClick = {
-                    if (currentPage < pages.size - 1) {
-                        currentPage++
-                    } else {
-                        onFinishOnboarding()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PastelViolet),
-                shape = RoundedCornerShape(16.dp)
+            // Bottom Navigation Indicators & Next/Get Started Button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    pages.indices.forEach { index ->
+                        Box(
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .height(8.dp)
+                                .width(if (index == currentPage) 28.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (index == currentPage) Color(0xFF6750A4) else Color(0xFFCAC4D0)
+                                )
+                                .clickable {
+                                    if (onboardingViewModel != null) {
+                                        onboardingViewModel.setPage(index)
+                                    } else {
+                                        localPageIndex = index
+                                    }
+                                }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { goToNext() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4)),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .testTag("onboarding_next_button")
                 ) {
                     Text(
-                        text = if (currentPage < pages.size - 1) "Next Feature" else "Get Started / Sign In",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color.White
+                        text = if (currentPage < pages.size - 1) "Continue" else "Get Started",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
-                        imageVector = if (currentPage < pages.size - 1) Icons.AutoMirrored.Filled.ArrowForward else Icons.Default.CheckCircle,
-                        contentDescription = null,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Next",
                         tint = Color.White
                     )
                 }
