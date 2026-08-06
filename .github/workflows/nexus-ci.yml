@@ -30,7 +30,6 @@ jobs:
     - name: Create local.properties & Setup Signing
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
-        # Set up a temporary keystore for build verification
         mkdir -p ~/.android
         keytool -genkeypair -alias androiddebugkey -keypass android -keystore ~/.android/debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
         cp ~/.android/debug.keystore ./debug.keystore
@@ -49,12 +48,11 @@ jobs:
         path: app/build/reports/tests/
 
   # ---------------------------------------------------------------------------
-  # JOB 2: WEB E2E, MOBILE APPIUM & LOAD VERIFICATION (UNIFIED SUITE)
+  # JOB 2: WEB E2E SELENIUM TESTS
   # ---------------------------------------------------------------------------
-  run-unified-qa-suite:
-    name: 🌐 Web E2E, Mobile Appium & Load Verification
+  web-e2e-tests:
+    name: 🌐 Web Frontend E2E (Selenium)
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -64,50 +62,93 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install dependencies and run Web E2E Tests (Selenium)
+    - name: Install dependencies & Run Web E2E Tests
       run: |
         npm install --prefix selenium-tests
         node selenium-tests/tests/login-tests.js
 
-    - name: Run Web Load Tests
-      run: |
-        node selenium-tests/load-test.js
+    - name: Upload Web E2E Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: web-e2e-report
+        path: selenium-tests/Test_Execution_Report.xlsx
 
-    - name: Run Backend Security Report Generator (SAST)
-      run: |
-        node selenium-tests/generate-reports.js
+  # ---------------------------------------------------------------------------
+  # JOB 3: MOBILE APPIUM E2E TESTS
+  # ---------------------------------------------------------------------------
+  mobile-e2e-tests:
+    name: 🤖 Mobile Application E2E (Appium)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-    - name: Install dependencies and run Mobile Appium E2E Tests
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies & Run Mobile E2E Tests
       run: |
         npm install --prefix appium-tests
         node appium-tests/tests/app-tests.js
 
-    - name: Consolidate all Excel Reports
-      run: |
-        mkdir -p QA_Reports
-        cp selenium-tests/Test_Execution_Report.xlsx QA_Reports/web_e2e_report.xlsx
-        cp selenium-tests/Load_Test_Execution_Report.xlsx QA_Reports/load_test_report.xlsx
-        cp appium-tests/App_Test_Execution_Report.xlsx QA_Reports/mobile_e2e_report.xlsx
-        cp "Vulnerability Test Results/findings.xlsx" QA_Reports/findings.xlsx
-        cp "Vulnerability Test Results/endpoint-inventory.xlsx" QA_Reports/endpoint-inventory.xlsx
-
-    - name: Upload All Test Excel Reports as Artifacts
+    - name: Upload Mobile E2E Report
       uses: actions/upload-artifact@v4
       with:
-        name: test-execution-reports
-        path: QA_Reports/
+        name: mobile-e2e-report
+        path: appium-tests/App_Test_Execution_Report.xlsx
 
-    - name: Publish Unified Run Summary
+  # ---------------------------------------------------------------------------
+  # JOB 4: BASELINE LOAD TESTS
+  # ---------------------------------------------------------------------------
+  load-tests:
+    name: ⚡ Baseline Performance Load Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies & Run Load Tests
       run: |
-        echo "## 🔮 Nexus AI OS - Unified CI/CD QA Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### ✅ All Test Cases Passed Successfully (100.0% Pass Rate)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "| Test Module | Cases / Metrics | Status | Target Report |" >> $GITHUB_STEP_SUMMARY
-        echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Web Frontend E2E (Selenium)** | 300 / 300 passed | **PASSED** | \`web_e2e_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Mobile Application E2E (Appium)** | 300 / 300 passed | **PASSED** | \`mobile_e2e_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Backend Security Audit (SAST)** | 7 vulnerability vectors audited | **PASSED** | \`findings.xlsx\` & \`endpoint-inventory.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Baseline Performance Load Test** | 100 VUs / 60s run | **PASSED** | \`load_test_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "> All compiled reports have been bundled and uploaded as the build artifact: **\`test-execution-reports\`**." >> $GITHUB_STEP_SUMMARY
+        npm install --prefix selenium-tests
+        node selenium-tests/load-test.js
+
+    - name: Upload Load Test Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: load-test-report
+        path: selenium-tests/Load_Test_Execution_Report.xlsx
+
+  # ---------------------------------------------------------------------------
+  # JOB 5: BACKEND SECURITY AUDIT (SAST)
+  # ---------------------------------------------------------------------------
+  security-sast-audit:
+    name: 🔒 Backend Security Audit (SAST)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies & Run Security Audit
+      run: |
+        npm install --prefix selenium-tests
+        node selenium-tests/generate-reports.js
+
+    - name: Upload SAST Findings & Inventory
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-sast-report
+        path: |
+          Vulnerability Test Results/findings.xlsx
+          Vulnerability Test Results/endpoint-inventory.xlsx
