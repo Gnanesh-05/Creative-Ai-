@@ -9,7 +9,9 @@ plugins {
 }
 
 android {
-  layout.buildDirectory.set(file("C:/Users/karna/.gradle-builds/creative-ai/app"))
+  if (System.getenv("GITHUB_ACTIONS") != "true") {
+    layout.buildDirectory.set(file("C:/Users/karna/.gradle-builds/creative-ai/app"))
+  }
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 

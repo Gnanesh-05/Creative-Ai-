@@ -8,4 +8,6 @@ plugins {
   alias(libs.plugins.google.services) apply false
 }
 
-layout.buildDirectory.set(file("C:/Users/karna/.gradle-builds/creative-ai/root"))
+if (System.getenv("GITHUB_ACTIONS") != "true") {
+  layout.buildDirectory.set(file("C:/Users/karna/.gradle-builds/creative-ai/root"))
+}
