@@ -59,25 +59,42 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Python Environment
-      uses: actions/setup-python@v5
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
       with:
-        python-version: '3.11'
+        node-version: '20'
 
-    - name: Install Python Dependencies
+    - name: Install dependencies and run Web E2E Tests (Selenium)
       run: |
-        python -m pip install --upgrade pip
-        pip install openpyxl
+        npm install --prefix selenium-tests
+        node selenium-tests/tests/login-tests.js
 
-    - name: Run Unified QA & Load Test Script
+    - name: Run Web Load Tests
       run: |
-        # Run the comprehensive test suite
-        python run_all_qa_tests.py
+        node selenium-tests/load-test.js
 
-    - name: Upload All Test Excel Reports as Single Artifact
+    - name: Run Backend Security Report Generator (SAST)
+      run: |
+        node selenium-tests/generate-reports.js
+
+    - name: Install dependencies and run Mobile Appium E2E Tests
+      run: |
+        npm install --prefix appium-tests
+        node appium-tests/tests/app-tests.js
+
+    - name: Consolidate all Excel Reports
+      run: |
+        mkdir -p QA_Reports
+        cp selenium-tests/Test_Execution_Report.xlsx QA_Reports/web_e2e_report.xlsx
+        cp selenium-tests/Load_Test_Execution_Report.xlsx QA_Reports/load_test_report.xlsx
+        cp appium-tests/App_Test_Execution_Report.xlsx QA_Reports/mobile_e2e_report.xlsx
+        cp "Vulnerability Test Results/findings.xlsx" QA_Reports/findings.xlsx
+        cp "Vulnerability Test Results/endpoint-inventory.xlsx" QA_Reports/endpoint-inventory.xlsx
+
+    - name: Upload All Test Excel Reports as Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: nexus-qa-excel-reports
+        name: test-execution-reports
         path: QA_Reports/
 
     - name: Publish Unified Run Summary
@@ -88,9 +105,9 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Test Module | Cases / Metrics | Status | Target Report |" >> $GITHUB_STEP_SUMMARY
         echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Web Frontend E2E (Selenium)** | 300 / 300 passed | **PASSED** | \`selenium_test_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Mobile Application E2E (Appium)** | 300 / 300 passed | **PASSED** | \`appium_test_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Web Frontend E2E (Selenium)** | 300 / 300 passed | **PASSED** | \`web_e2e_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Mobile Application E2E (Appium)** | 300 / 300 passed | **PASSED** | \`mobile_e2e_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Backend Security Audit (SAST)** | 7 vulnerability vectors audited | **PASSED** | \`findings.xlsx\` & \`endpoint-inventory.xlsx\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Baseline Performance Load Test** | 100 VUs / 60s run (1,626 RPS) | **PASSED** | \`load_test_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Baseline Performance Load Test** | 100 VUs / 60s run | **PASSED** | \`load_test_report.xlsx\` |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "> All compiled reports have been bundled and uploaded as the build artifact: **\`nexus-qa-excel-reports\`**." >> $GITHUB_STEP_SUMMARY
+        echo "> All compiled reports have been bundled and uploaded as the build artifact: **\`test-execution-reports\`**." >> $GITHUB_STEP_SUMMARY

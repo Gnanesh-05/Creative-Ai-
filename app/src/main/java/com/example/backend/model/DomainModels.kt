@@ -1,4 +1,4 @@
-package com.example.domain.model
+package com.example.backend.model
 
 data class UserDomain(
     val userId: String,

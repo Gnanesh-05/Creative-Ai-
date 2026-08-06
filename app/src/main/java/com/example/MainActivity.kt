@@ -33,6 +33,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.frontend.viewmodel.NexusViewModel
+import com.example.frontend.viewmodel.AuthViewModel
+import com.example.frontend.viewmodel.ChatViewModel
+import com.example.frontend.viewmodel.SettingsViewModel
 import com.example.frontend.screens.ChatScreen
 import com.example.frontend.screens.HomeScreen
 import com.example.frontend.screens.ProfileScreen
@@ -46,23 +49,31 @@ import com.example.frontend.screens.EmailVerificationScreen
 import com.example.frontend.screens.GameCenterScreen
 import com.example.frontend.screens.LoginScreen
 import com.example.frontend.screens.OnboardingScreen
+import com.example.frontend.screens.RegisterScreen
+import com.example.frontend.screens.ForgotPasswordScreen
 
 class MainActivity : ComponentActivity() {
     private val viewModel: NexusViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             NexusAiTheme {
-                var appState by remember { mutableStateOf(1) } // 0: Onboarding, 1: Login, 2: Main App, 3: Email Verification
+                var appState by remember { mutableStateOf(1) } // 0: Onboarding, 1: Login, 2: Main App, 3: Email Verification, 4: Register, 5: Forgot Password
 
                 when (appState) {
                     0 -> OnboardingScreen(
                         onFinishOnboarding = { appState = 1 }
                     )
                     1 -> LoginScreen(
-                        onLoginSuccess = { userName, userEmail ->
+                        authViewModel = authViewModel,
+                        onNavigateToRegister = { appState = 4 },
+                        onNavigateToForgotPassword = { appState = 5 },
+                        onLoginSuccess = {
                             appState = 2
                         }
                     )
@@ -70,7 +81,23 @@ class MainActivity : ComponentActivity() {
                         onVerifiedSuccess = { appState = 2 },
                         onSignOut = { appState = 1 }
                     )
-                    else -> MainAppContent(viewModel = viewModel)
+                    4 -> RegisterScreen(
+                        authViewModel = authViewModel,
+                        onNavigateToLogin = { appState = 1 },
+                        onRegisterSuccess = { appState = 3 }
+                    )
+                    5 -> ForgotPasswordScreen(
+                        authViewModel = authViewModel,
+                        onNavigateToResetToken = { appState = 1 },
+                        onBackToLogin = { appState = 1 }
+                    )
+                    else -> MainAppContent(
+                        viewModel = viewModel,
+                        authViewModel = authViewModel,
+                        chatViewModel = chatViewModel,
+                        settingsViewModel = settingsViewModel,
+                        onLogout = { appState = 1 }
+                    )
                 }
             }
         }
@@ -78,7 +105,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainAppContent(viewModel: NexusViewModel) {
+fun MainAppContent(
+    viewModel: NexusViewModel,
+    authViewModel: AuthViewModel,
+    chatViewModel: ChatViewModel,
+    settingsViewModel: SettingsViewModel,
+    onLogout: () -> Unit
+) {
     var selectedTab by remember { mutableStateOf(0) } // 0: Home, 1: Voice, 2: Chat, 3: Studio, 4: Profile
     var showGameCenter by remember { mutableStateOf(false) }
     var selectedGameTab by remember { mutableStateOf(0) }
@@ -140,20 +173,17 @@ fun MainAppContent(viewModel: NexusViewModel) {
             val modifier = Modifier.padding(innerPadding)
             when (selectedTab) {
                 0 -> HomeScreen(
-                    viewModel = viewModel,
-                    onNavigateToVoice = { selectedTab = 1 },
-                    onNavigateToChat = { selectedTab = 2 },
-                    onNavigateToStudio = { selectedTab = 3 },
-                    onNavigateToAgents = { selectedTab = 3 },
-                    onNavigateToGames = {
-                        selectedGameTab = 0
-                        showGameCenter = true
-                    },
-                    onNavigateToGameTab = { gameIndex ->
-                        selectedGameTab = gameIndex
-                        showGameCenter = true
-                    },
-                    modifier = modifier
+                    onNavigate = { route ->
+                        when (route) {
+                            "chat" -> selectedTab = 2
+                            "image_generator" -> selectedTab = 3
+                            "music_composer" -> selectedTab = 3
+                            "game_center" -> {
+                                selectedGameTab = 0
+                                showGameCenter = true
+                            }
+                        }
+                    }
                 )
                 1 -> VoiceScreen(
                     viewModel = viewModel,
@@ -162,9 +192,7 @@ fun MainAppContent(viewModel: NexusViewModel) {
                     modifier = modifier
                 )
                 2 -> ChatScreen(
-                    viewModel = viewModel,
-                    onBack = { selectedTab = 0 },
-                    modifier = modifier
+                    chatViewModel = chatViewModel
                 )
                 3 -> StudioScreen(
                     viewModel = viewModel,
@@ -172,9 +200,9 @@ fun MainAppContent(viewModel: NexusViewModel) {
                     modifier = modifier
                 )
                 4 -> ProfileScreen(
-                    viewModel = viewModel,
-                    onNavigateToHome = { selectedTab = 0 },
-                    modifier = modifier
+                    authViewModel = authViewModel,
+                    settingsViewModel = settingsViewModel,
+                    onLogout = onLogout
                 )
             }
         }

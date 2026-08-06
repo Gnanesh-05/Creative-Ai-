@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.backend.remote.TicTacToeMoveRequest
 import com.example.backend.repository.CreativeAiRepository
-import com.example.domain.engine.GameEngineHelper
+import com.example.backend.engine.GameEngineHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,0 +1,14 @@
+{
+  "name": "creative-ai-root",
+  "version": "1.0.0",
+  "description": "Root orchestrator for Creative AI workspace modules",
+  "scripts": {
+    "android": "powershell -Command \"$env:JAVA_HOME='C:\\Program Files\\Android\\Android Studio\\jbr'; .\\gradlew.bat installDebug\"",
+    "build-android": "powershell -Command \"$env:JAVA_HOME='C:\\Program Files\\Android\\Android Studio\\jbr'; .\\gradlew.bat assembleDebug\"",
+    "uninstall-android": "C:\\Users\\karna\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe uninstall com.aistudio.nexusai.os",
+    "web": "npm run dev --prefix web",
+    "qa-tests": "python run_all_qa_tests.py",
+    "selenium-tests": "npm run test --prefix selenium-tests",
+    "appium-tests": "npm run test --prefix appium-tests"
+  }
+}
